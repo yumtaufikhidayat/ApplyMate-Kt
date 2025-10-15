@@ -3,12 +3,14 @@ package id.yumtaufikhidayat.applymate.presentation.application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.yumtaufikhidayat.applymate.core.ext.toEnum
 import id.yumtaufikhidayat.applymate.domain.model.Application
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import id.yumtaufikhidayat.applymate.domain.usecase.application.ApplicationUseCases
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
@@ -28,8 +30,12 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                         id = it.id,
                         position = it.position,
                         company = it.company,
-                        city = it.city.orEmpty(),
-                        note = it.note.orEmpty(),
+                        city = it.city,
+                        salary = it.salary,
+                        jobLink = it.jobLink,
+                        jobDesc = it.jobDesc,
+                        jobRequirement = it.jobRequirement,
+                        note = it.note,
                         status = it.status.name,
                         isEditMode = true
                     )
@@ -39,60 +45,100 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
     }
 
     fun updateField(field: String, value: String) {
-        _state.value = when (field) {
-            "position" -> _state.value.copy(position = value)
-            "company" -> _state.value.copy(company = value)
-            "city" -> _state.value.copy(city = value)
-            "note" -> _state.value.copy(note = value)
-            else -> _state.value
+        _state.update { current ->
+            when (field) {
+                "position" -> current.copy(position = value, positionError = null)
+                "company" -> current.copy(company = value, companyError = null)
+                "city" -> current.copy(city = value)
+                "jobLink" -> current.copy(jobLink = value, jobLinkError = null)
+                "jobDesc" -> current.copy(jobDesc = value)
+                "jobRequirement" -> current.copy(jobRequirement = value)
+                "salary" -> current.copy(salary = value)
+                "note" -> current.copy(note = value)
+                else -> current
+            }
         }
     }
 
     fun saveApplication(
         selectedStatus: ApplicationStatus,
-        onSaved: () -> Unit
+        onSaved: (Long) -> Unit
     ) {
         viewModelScope.launch {
-            val valueState = _state.value
-            if (valueState.position.isBlank() || valueState.company.isBlank()) {
-                _state.value = valueState.copy(snackbarMessage = "Posisi dan Perusahaan wajib diisi")
-                return@launch
+            var hasError = false
+            val currentState = _state.value
+
+            _state.update {
+                currentState.copy(
+                    positionError = null,
+                    companyError = null,
+                    jobLinkError = null
+                )
             }
 
+            var positionError: String? = null
+            var companyError: String? = null
+            var jobLinkError: String? = null
+
+            if (currentState.position.isBlank()) {
+                hasError = true
+                positionError = "Posisi pekerjaan wajib diisi"
+            }
+
+            if (currentState.company.isBlank()) {
+                hasError = true
+                companyError = "Nama perusahaan wajib diisi"
+            }
+
+            if (currentState.jobLink.isBlank()) {
+                hasError = true
+                jobLinkError = "Tautan lamaran wajib diisi"
+            } else if (!android.util.Patterns.WEB_URL.matcher(currentState.jobLink).matches()) {
+                hasError = true
+                jobLinkError = "Format link tidak valid"
+            }
+
+            _state.value = currentState.copy(
+                positionError = positionError,
+                companyError = companyError,
+                jobLinkError = jobLinkError
+            )
+
+            if (hasError) return@launch
+
             val app = Application(
-                id = valueState.id,
-                position = valueState.position,
-                company = valueState.company,
-                city = valueState.city.ifBlank { null },
-                salaryMin = null,
-                salaryMax = null,
-                jobLink = null,
-                jobDesc = null,
-                note = valueState.note.ifBlank { null },
+                id = currentState.id,
+                position = currentState.position,
+                company = currentState.company,
+                city = currentState.city,
+                salary = currentState.salary,
+                jobLink = currentState.jobLink.trim(),
+                jobDesc = currentState.jobDesc,
+                jobRequirement = currentState.jobRequirement,
+                note = currentState.note,
                 status = selectedStatus,
                 appliedAt = Instant.now(),
                 updatedAt = Instant.now()
             )
 
-            if (valueState.isEditMode) {
-                val oldStatus = try {
-                    ApplicationStatus.valueOf(valueState.status ?: "APPLIED")
-                } catch (_: Exception) {
-                    ApplicationStatus.APPLIED
-                }
-
+            if (currentState.isEditMode) {
+                val oldStatus = currentState.status?.toEnum<ApplicationStatus>()
                 if (oldStatus != selectedStatus) {
-                    useCases.updateApplicationStatus(app.id, oldStatus, selectedStatus, "Ubah status manual")
+                    useCases.updateApplicationStatus(
+                        appId = currentState.id,
+                        from = oldStatus,
+                        to = selectedStatus,
+                        note = "Perubahan status lamaran"
+                    )
                 }
-
                 useCases.updateApplication(app)
-                _state.value = valueState.copy(snackbarMessage = "Lamaran berhasil diperbarui")
+                _state.value = currentState.copy(snackbarMessage = "Lamaran berhasil diperbarui")
+                onSaved(app.id)
             } else {
                 useCases.addApplication(app)
-                _state.value = valueState.copy(snackbarMessage = "Lamaran berhasil ditambahkan")
+                _state.value = currentState.copy(snackbarMessage = "Lamaran berhasil ditambahkan")
+                onSaved(app.id)
             }
-
-            onSaved()
         }
     }
 

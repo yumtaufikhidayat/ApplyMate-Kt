@@ -31,10 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
+import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,12 +50,11 @@ fun AddEditApplicationScreen(
     var expanded by remember { mutableStateOf(false) }
     val allStatus = ApplicationStatus.entries.toTypedArray()
     var selectedStatus by remember { mutableStateOf(ApplicationStatus.APPLIED) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(appId) {
         viewModel.loadApplication(appId)
     }
-
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.snackbarMessage) {
         state.snackbarMessage?.let {
@@ -62,7 +63,6 @@ fun AddEditApplicationScreen(
         }
     }
 
-    // Sinkronisasi status dropdown saat edit mode
     LaunchedEffect(state.isEditMode) {
         if (state.isEditMode) {
             selectedStatus = try {
@@ -88,9 +88,15 @@ fun AddEditApplicationScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.saveApplication(selectedStatus = selectedStatus) {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) { inclusive = true }
+                    viewModel.saveApplication(selectedStatus = selectedStatus) { id ->
+                        if (state.isEditMode) {
+                            navController.navigate("${Routes.APPLICATION_DETAIL}/$id") {
+                                popUpTo("${Routes.APPLICATION_DETAIL}/$id") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.HOME) { inclusive = true }
+                            }
                         }
                     }
                 }
@@ -107,29 +113,50 @@ fun AddEditApplicationScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedTextField(
+            FormTextField(
+                label = "Posisi Pekerjaan",
                 value = state.position,
-                onValueChange = { viewModel.updateField("position", it) },
-                label = { Text("Posisi") },
-                modifier = Modifier.fillMaxWidth()
+                error = state.positionError,
+                onValueChange = { viewModel.updateField("position", it ) }
             )
-            OutlinedTextField(
+            FormTextField(
+                label = "Perusahaan",
                 value = state.company,
-                onValueChange = { viewModel.updateField("company", it) },
-                label = { Text("Perusahaan") },
-                modifier = Modifier.fillMaxWidth()
+                error = state.companyError,
+                onValueChange = { viewModel.updateField("company", it ) }
             )
-            OutlinedTextField(
+            FormTextField(
+                label = "Kota (Opsional)",
                 value = state.city,
-                onValueChange = { viewModel.updateField("city", it) },
-                label = { Text("Kota (Opsional)") },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = { viewModel.updateField("city", it ) }
             )
-            OutlinedTextField(
+            FormTextField(
+                label = "Tautan Lamaran",
+                value = state.jobLink,
+                error = state.jobLinkError,
+                keyboardType = KeyboardType.Uri,
+                onValueChange = { viewModel.updateField("jobLink", it ) }
+            )
+            FormTextField(
+                label = "Deskripsi Pekerjaan",
+                value = state.jobDesc,
+                onValueChange = { viewModel.updateField("jobDesc", it ) }
+            )
+            FormTextField(
+                label = "Persyaratan Pekerjaan (Opsional)",
+                value = state.jobRequirement,
+                onValueChange = { viewModel.updateField("jobRequirement", it ) }
+            )
+            FormTextField(
+                label = "Gaji (Opsional)",
+                value = state.salary,
+                keyboardType = KeyboardType.Number,
+                onValueChange = { viewModel.updateField("jobDesc", it ) }
+            )
+            FormTextField(
+                label = "Catatan (Opsional)",
                 value = state.note,
-                onValueChange = { viewModel.updateField("note",it) },
-                label = { Text("Catatan (Opsional)") },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = { viewModel.updateField("note", it ) }
             )
             ExposedDropdownMenuBox(
                 expanded = expanded,

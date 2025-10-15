@@ -1,5 +1,6 @@
 package id.yumtaufikhidayat.applymate.presentation.application
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +26,8 @@ class ApplicationDetailViewModel @Inject constructor(
     val state: StateFlow<ApplicationDetailState> = _state.asStateFlow()
 
     fun loadApplication(id: Long) {
+        if (id <= 0) return
+
         viewModelScope.launch {
             appUseCase.getApplicationById(id).collectLatest { app ->
                 _state.update { it.copy(application = app) }

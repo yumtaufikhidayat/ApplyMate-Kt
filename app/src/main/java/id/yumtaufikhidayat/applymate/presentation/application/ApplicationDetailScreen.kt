@@ -31,11 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.core.util.toReadableString
+import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextInfo
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
 
@@ -49,7 +49,7 @@ fun ApplicationDetailScreen(
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(appId) {
-        viewModel.loadApplication(appId)
+        if (appId > 0) viewModel.loadApplication(appId)
     }
 
     val app = state.application ?: return Box(
@@ -112,17 +112,50 @@ fun ApplicationDetailScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(app.position, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-            Text(app.company, style = MaterialTheme.typography.titleMedium)
-            Text("Kota: ${app.city ?: "-"}", style = MaterialTheme.typography.bodyMedium)
-            Text("Status: ${app.status.name}", style = MaterialTheme.typography.bodyMedium)
-            if (!app.note.isNullOrBlank()) Text("Catatan: ${app.note}")
-
+            ApplicationTextInfo(
+                title = "Posisi Pekerjaan",
+                description = app.position,
+            )
+            
+            ApplicationTextInfo(
+                title = "Perusahaan",
+                description = app.company
+            )
+            
+            ApplicationTextInfo(
+                title = "Kota",
+                description = app.city.ifBlank { "-" }
+            )
+            
+            ApplicationTextInfo(
+                title = "Tautan Lamaran",
+                description = app.jobLink.ifBlank { "-" }
+            )
+            
+            ApplicationTextInfo(
+                title = "Deskripsi Pekerjaan",
+                description = app.jobDesc.ifBlank { "-" }
+            )
+            
+            ApplicationTextInfo(
+                title = "Persyaratan Pekerjaan",
+                description = app.jobRequirement.ifBlank { "-" }
+            )
+            
+            ApplicationTextInfo(
+                title = "Gaji",
+                description = app.salary.ifBlank { "-" }
+            )
+            
+            ApplicationTextInfo(
+                title = "Catatan",
+                description = app.note.ifBlank { "-" }
+            )
             Divider(modifier = Modifier.padding(vertical = 12.dp))
 
             Text("Riwayat Status", style = MaterialTheme.typography.titleMedium)
             if (state.history.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     state.history.forEach { history ->
                         Text(
                             text = "• ${history.fromStatus ?: "-"} → ${history.toStatus} (${history.changedAt.toReadableString()})",

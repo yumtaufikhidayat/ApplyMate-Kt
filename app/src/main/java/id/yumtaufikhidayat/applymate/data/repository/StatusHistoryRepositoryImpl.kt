@@ -1,5 +1,6 @@
 package id.yumtaufikhidayat.applymate.data.repository
 
+import android.util.Log
 import id.yumtaufikhidayat.applymate.data.local.dao.StatusHistoryDao
 import id.yumtaufikhidayat.applymate.data.local.entity.StatusHistoryEntity
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
@@ -21,6 +22,7 @@ class StatusHistoryRepositoryImpl @Inject constructor(
         to: ApplicationStatus,
         note: String?
     ) {
+        Log.d("HISTORY_INSERT", "Insert history for appId=$appId from=$from to=$to")
         val history = StatusHistoryEntity(
             applicationId = appId,
             fromStatus = from?.name,
