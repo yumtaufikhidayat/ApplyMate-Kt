@@ -1,0 +1,3 @@
+package id.yumtaufikhidayat.applymate.presentation.navigation
+
+class Destinations
