@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,11 +32,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
+import id.yumtaufikhidayat.applymate.presentation.components.FormMultiLineTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
@@ -117,45 +121,91 @@ fun AddEditApplicationScreen(
                 label = "Posisi Pekerjaan",
                 value = state.position,
                 error = state.positionError,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("position", it ) }
             )
             FormTextField(
                 label = "Perusahaan",
                 value = state.company,
                 error = state.companyError,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("company", it ) }
+            )
+            FormMultiLineTextField(
+                label = "Tentang Perusahaan (Opsional)",
+                value = state.companyAbout,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
+                onValueChange = { viewModel.updateField("companyAbout", it ) }
             )
             FormTextField(
                 label = "Kota (Opsional)",
                 value = state.city,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("city", it ) }
             )
             FormTextField(
                 label = "Tautan Lamaran",
                 value = state.jobLink,
                 error = state.jobLinkError,
-                keyboardType = KeyboardType.Uri,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("jobLink", it ) }
             )
-            FormTextField(
-                label = "Deskripsi Pekerjaan",
+            FormMultiLineTextField(
+                label = "Deskripsi Pekerjaan (Opsional)",
                 value = state.jobDesc,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("jobDesc", it ) }
             )
-            FormTextField(
+            FormMultiLineTextField(
                 label = "Persyaratan Pekerjaan (Opsional)",
                 value = state.jobRequirement,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("jobRequirement", it ) }
             )
             FormTextField(
                 label = "Gaji (Opsional)",
                 value = state.salary,
-                keyboardType = KeyboardType.Number,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
                 onValueChange = { viewModel.updateField("jobDesc", it ) }
             )
-            FormTextField(
+            FormMultiLineTextField(
                 label = "Catatan (Opsional)",
                 value = state.note,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
                 onValueChange = { viewModel.updateField("note", it ) }
             )
             ExposedDropdownMenuBox(

@@ -2,6 +2,7 @@ package id.yumtaufikhidayat.applymate.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -17,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun FormTextField(
+fun FormMultiLineTextField(
     modifier: Modifier = Modifier,
     label: String,
     value: String,
@@ -42,11 +43,10 @@ fun FormTextField(
                 )
             }
         },
-        singleLine = true,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         shape = RoundedCornerShape(8.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().height(150.dp),
     )
 
     AnimatedVisibility(visible = error != null) {

@@ -4,6 +4,7 @@ data class AddEditApplicationState(
     val id: Long = 0,
     val position: String = "",
     val company: String = "",
+    val companyAbout: String = "",
     val city: String = "",
     val jobLink: String = "",
     val jobDesc: String = "",

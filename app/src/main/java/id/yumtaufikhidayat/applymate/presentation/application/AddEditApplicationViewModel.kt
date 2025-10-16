@@ -30,6 +30,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                         id = it.id,
                         position = it.position,
                         company = it.company,
+                        companyAbout = it.companyAbout,
                         city = it.city,
                         salary = it.salary,
                         jobLink = it.jobLink,
@@ -49,6 +50,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
             when (field) {
                 "position" -> current.copy(position = value, positionError = null)
                 "company" -> current.copy(company = value, companyError = null)
+                "companyAbout" -> current.copy(companyAbout = value)
                 "city" -> current.copy(city = value)
                 "jobLink" -> current.copy(jobLink = value, jobLinkError = null)
                 "jobDesc" -> current.copy(jobDesc = value)
@@ -110,6 +112,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 id = currentState.id,
                 position = currentState.position,
                 company = currentState.company,
+                companyAbout = currentState.companyAbout,
                 city = currentState.city,
                 salary = currentState.salary,
                 jobLink = currentState.jobLink.trim(),
