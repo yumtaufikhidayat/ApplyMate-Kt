@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -75,6 +76,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
             "jobRequirement" -> _state.update { it.copy(jobRequirement = value) }
             "salary" -> _state.update { it.copy(salary = value) }
             "note" -> _state.update { it.copy(note = value) }
+            "interviewLink" -> _state.update { it.copy(interviewLink = value, interviewLinkError = null) }
         }
     }
 
@@ -124,6 +126,17 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 jobLinkError = jobLinkError
             )
 
+            if (selectedStatus == ApplicationStatus.INTERVIEW) {
+                if (currentState.interviewDate == null) {
+                    hasError = true
+                    _state.update { it.copy(interviewDateError = "Tanggal wawancara wajib diisi") }
+                }
+                if (currentState.interviewLink.isBlank()) {
+                    hasError = true
+                    _state.update { it.copy(interviewLinkError = "Link meeting wajib diisi") }
+                }
+            }
+
             if (hasError) return@launch
 
             val normalizedJobLink = currentState.jobLink.let { link ->
@@ -168,6 +181,10 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 onSaved(app.id)
             }
         }
+    }
+
+    fun updateInterviewDate(date: LocalDate) {
+        _state.update { it.copy(interviewDate = date, interviewDateError = null) }
     }
 
     fun consumeSnackbar() {

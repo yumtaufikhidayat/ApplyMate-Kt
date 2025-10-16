@@ -1,5 +1,7 @@
 package id.yumtaufikhidayat.applymate.presentation.application
 
+import java.time.LocalDate
+
 data class AddEditApplicationState(
     val id: Long = 0,
     val position: String = "",
@@ -18,5 +20,11 @@ data class AddEditApplicationState(
     // State Error
     val positionError: String? = null,
     val companyError: String? = null,
-    val jobLinkError: String? = null
+    val jobLinkError: String? = null,
+
+    // Interview State
+    val interviewDate: LocalDate? = null,
+    val interviewLink: String = "",
+    val interviewDateError: String? = null,
+    val interviewLinkError: String? = null,
 )

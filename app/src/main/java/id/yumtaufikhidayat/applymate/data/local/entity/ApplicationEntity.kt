@@ -3,6 +3,7 @@ package id.yumtaufikhidayat.applymate.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.Instant
+import java.time.LocalDate
 
 @Entity(tableName = "applications")
 data class ApplicationEntity(
@@ -19,5 +20,7 @@ data class ApplicationEntity(
     val note: String,
     val status: String,
     val appliedAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val interviewDate: LocalDate? = null,
+    val interviewLink: String? = null,
 )

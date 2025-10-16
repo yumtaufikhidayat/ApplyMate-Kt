@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import id.yumtaufikhidayat.applymate.presentation.home.components.ApplicationCard
+import id.yumtaufikhidayat.applymate.presentation.components.ApplicationCard
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)

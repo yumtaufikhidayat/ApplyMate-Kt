@@ -24,6 +24,7 @@ fun FormMultiLineTextField(
     value: String,
     error: String? = null,
     readOnly: Boolean = false,
+    placeholder: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     onValueChange: (String) -> Unit,
@@ -47,11 +48,12 @@ fun FormMultiLineTextField(
         keyboardActions = keyboardActions,
         shape = RoundedCornerShape(8.dp),
         modifier = modifier.fillMaxWidth().height(150.dp),
+        placeholder = { Text(text = placeholder) }
     )
 
     AnimatedVisibility(visible = error != null) {
         Text(
-            text = error ?: "",
+            text = error.orEmpty(),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 2.dp, start = 4.dp)

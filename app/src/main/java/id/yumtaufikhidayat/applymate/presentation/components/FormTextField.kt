@@ -1,6 +1,7 @@
 package id.yumtaufikhidayat.applymate.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ fun FormTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     onValueChange: (String) -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -46,7 +48,10 @@ fun FormTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         shape = RoundedCornerShape(8.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth()
+            .then(
+            if (onClick != null) Modifier.clickable { onClick() } else Modifier
+        )
     )
 
     AnimatedVisibility(visible = error != null) {

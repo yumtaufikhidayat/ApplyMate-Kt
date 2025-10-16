@@ -1,16 +1,20 @@
 package id.yumtaufikhidayat.applymate.presentation.application
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -23,13 +27,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -39,10 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
+import id.yumtaufikhidayat.applymate.presentation.components.FormDateField
 import id.yumtaufikhidayat.applymate.presentation.components.FormMultiLineTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextFieldLink
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +67,35 @@ fun AddEditApplicationScreen(
     val allStatus = ApplicationStatus.entries.toTypedArray()
     var selectedStatus by remember { mutableStateOf(ApplicationStatus.APPLIED) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = state.interviewDate
+                ?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+                ?: Instant.now().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val millis = datePickerState.selectedDateMillis
+                    if (millis != null) {
+                        val localDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        viewModel.updateInterviewDate(localDate)
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Batal") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     LaunchedEffect(appId) {
         viewModel.loadApplication(appId)
@@ -71,7 +111,7 @@ fun AddEditApplicationScreen(
     LaunchedEffect(state.isEditMode) {
         if (state.isEditMode) {
             selectedStatus = try {
-                ApplicationStatus.valueOf(state.status ?: "APPLIED")
+                ApplicationStatus.valueOf(state.status ?: ApplicationStatus.APPLIED.name)
             } catch (_: Exception) {
                 ApplicationStatus.APPLIED
             }
@@ -127,7 +167,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
                 ),
-                onValueChange = { viewModel.updateField("position", it ) }
+                onValueChange = { viewModel.updateField("position", it) }
             )
             FormTextField(
                 label = "Perusahaan",
@@ -138,7 +178,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
                 ),
-                onValueChange = { viewModel.updateField("company", it ) }
+                onValueChange = { viewModel.updateField("company", it) }
             )
             FormMultiLineTextField(
                 label = "Tentang Perusahaan (Opsional)",
@@ -148,7 +188,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Default
                 ),
-                onValueChange = { viewModel.updateField("companyAbout", it ) }
+                onValueChange = { viewModel.updateField("companyAbout", it) }
             )
             FormTextField(
                 label = "Kota (Opsional)",
@@ -158,7 +198,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
                 ),
-                onValueChange = { viewModel.updateField("city", it ) }
+                onValueChange = { viewModel.updateField("city", it) }
             )
             FormTextFieldLink(
                 label = "Tautan Lamaran",
@@ -168,7 +208,7 @@ fun AddEditApplicationScreen(
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Next
                 ),
-                onValueChange = { viewModel.updateField("jobLink", it ) }
+                onValueChange = { viewModel.updateField("jobLink", it) }
             )
             FormMultiLineTextField(
                 label = "Deskripsi Pekerjaan (Opsional)",
@@ -178,7 +218,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Default
                 ),
-                onValueChange = { viewModel.updateField("jobDesc", it ) }
+                onValueChange = { viewModel.updateField("jobDesc", it) }
             )
             FormMultiLineTextField(
                 label = "Persyaratan Pekerjaan (Opsional)",
@@ -188,7 +228,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Default
                 ),
-                onValueChange = { viewModel.updateField("jobRequirement", it ) }
+                onValueChange = { viewModel.updateField("jobRequirement", it) }
             )
             FormTextField(
                 label = "Gaji (Opsional)",
@@ -197,7 +237,7 @@ fun AddEditApplicationScreen(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
                 ),
-                onValueChange = { viewModel.updateField("jobDesc", it ) }
+                onValueChange = { viewModel.updateField("salary", it) }
             )
             FormMultiLineTextField(
                 label = "Catatan (Opsional)",
@@ -207,11 +247,12 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Done
                 ),
-                onValueChange = { viewModel.updateField("note", it ) }
+//                placeholder = "Contoh: alamat kantor, link wawancara, jadwal wawancara, dsb",
+                onValueChange = { viewModel.updateField("note", it) }
             )
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+                onExpandedChange = { expanded = !expanded },
             ) {
                 OutlinedTextField(
                     value = selectedStatus.name,
@@ -221,6 +262,7 @@ fun AddEditApplicationScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
@@ -228,7 +270,8 @@ fun AddEditApplicationScreen(
 
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    shape = RoundedCornerShape(8.dp),
+                    onDismissRequest = { expanded = false },
                 ) {
                     allStatus.forEach { status ->
                         DropdownMenuItem(
@@ -239,6 +282,26 @@ fun AddEditApplicationScreen(
                             }
                         )
                     }
+                }
+            }
+            AnimatedVisibility(visible = selectedStatus == ApplicationStatus.INTERVIEW) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FormDateField(
+                        label = "Tanggal Wawancara",
+                        valueText = state.interviewDate
+                            ?.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                            .orEmpty(),
+                        error = state.interviewDateError,
+                        onClick = { showDatePicker = true }
+                    )
+
+                    FormTextField(
+                        label = "Tautan Wawancara",
+                        value = state.interviewLink,
+                        onValueChange = { viewModel.updateField("interviewLink", it) },
+                        error = state.interviewLinkError,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+                    )
                 }
             }
         }

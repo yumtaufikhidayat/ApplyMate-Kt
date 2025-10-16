@@ -1,4 +1,4 @@
-package id.yumtaufikhidayat.applymate.presentation.home.components
+package id.yumtaufikhidayat.applymate.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,9 +11,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import id.yumtaufikhidayat.applymate.domain.model.Application
+import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 
 @Composable
 fun ApplicationCard(
@@ -39,8 +41,18 @@ fun ApplicationCard(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Status: ${application.status}",
-                style = MaterialTheme.typography.bodySmall
+                text = "${application.status}",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = when (application.status) {
+                        ApplicationStatus.APPLIED -> Color.Cyan
+                        ApplicationStatus.SCREENING -> Color.Cyan
+                        ApplicationStatus.INTERVIEW -> Color.Cyan
+                        ApplicationStatus.ASSIGNMENT -> Color.Magenta
+                        ApplicationStatus.OFFER -> Color.Yellow
+                        ApplicationStatus.HIRED -> Color.Green
+                        ApplicationStatus.REJECTED -> Color.Red
+                    }
+                )
             )
         }
     }
