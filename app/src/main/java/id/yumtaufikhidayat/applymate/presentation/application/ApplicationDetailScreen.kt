@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -50,6 +49,8 @@ fun ApplicationDetailScreen(
     viewModel: ApplicationDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val application = state.application
+    val historyList = state.history
 
     LaunchedEffect(appId) {
         if (appId > 0) viewModel.loadApplication(appId)
@@ -155,26 +156,35 @@ fun ApplicationDetailScreen(
                 title = "Catatan",
                 description = app.note.ifBlank { "-" }
             )
+
+            ApplicationTextInfo(
+                title = "Status Lamaran",
+                description = app.status.name
+            )
             Divider(modifier = Modifier.padding(vertical = 12.dp))
 
-            Text("Riwayat Status", style = MaterialTheme.typography.titleMedium)
-            if (state.history.isNotEmpty()) {
+            Text("Riwayat Status Lamaran", style = MaterialTheme.typography.titleMedium)
+            if (application != null) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    state.history.forEach { history ->
-                        Text(
-                            text = "• ${history.fromStatus ?: "-"} → ${history.toStatus} (${history.changedAt.toReadableString()})",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    if (historyList.isNotEmpty()) {
+                        historyList.forEach { history ->
+                            Text(
+                                text = "• Perubahan status ${history.fromStatus ?: "-"} menjadi ${history.toStatus} pada ${history.changedAt.toReadableString()}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
+
+                    val appliedAt = application.appliedAt.toReadableString()
+                    Text(
+                        text = "• Lamaran dengan status ${ApplicationStatus.APPLIED.name} dikirim pada $appliedAt",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             } else {
-                val appliedAt = state.application?.appliedAt?.toReadableString() ?: "-"
                 Text(
-                    text = "Lamaran dengan status ${state.application?.status?.name ?: ApplicationStatus.APPLIED} dikirim pada $appliedAt",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    text = "Data lamaran tidak ditemukan.",
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }
