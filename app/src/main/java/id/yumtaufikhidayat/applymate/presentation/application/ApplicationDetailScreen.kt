@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import id.yumtaufikhidayat.applymate.core.ext.cleanUrl
+import id.yumtaufikhidayat.applymate.core.helper.ApplicationTextType
 import id.yumtaufikhidayat.applymate.core.util.toReadableString
 import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextInfo
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
@@ -129,7 +131,8 @@ fun ApplicationDetailScreen(
             
             ApplicationTextInfo(
                 title = "Tautan Lamaran",
-                description = app.jobLink.ifBlank { "-" }
+                description = app.jobLink.cleanUrl(),
+                type = ApplicationTextType.LINK
             )
             
             ApplicationTextInfo(

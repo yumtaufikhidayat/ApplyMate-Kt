@@ -1,8 +1,8 @@
 package id.yumtaufikhidayat.applymate.domain.repository
 
+import id.yumtaufikhidayat.applymate.data.local.entity.StatusHistoryEntity
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import kotlinx.coroutines.flow.Flow
-import id.yumtaufikhidayat.applymate.data.local.entity.StatusHistoryEntity
 
 interface StatusHistoryRepository {
     fun getByApplication(appId: Long): Flow<List<StatusHistoryEntity>>

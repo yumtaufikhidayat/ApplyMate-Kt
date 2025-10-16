@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import id.yumtaufikhidayat.applymate.presentation.components.FormMultiLineTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
+import id.yumtaufikhidayat.applymate.presentation.components.FormTextFieldLink
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,7 +146,7 @@ fun AddEditApplicationScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Default
                 ),
                 onValueChange = { viewModel.updateField("companyAbout", it ) }
             )
@@ -159,7 +160,7 @@ fun AddEditApplicationScreen(
                 ),
                 onValueChange = { viewModel.updateField("city", it ) }
             )
-            FormTextField(
+            FormTextFieldLink(
                 label = "Tautan Lamaran",
                 value = state.jobLink,
                 error = state.jobLinkError,
@@ -175,7 +176,7 @@ fun AddEditApplicationScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Default
                 ),
                 onValueChange = { viewModel.updateField("jobDesc", it ) }
             )
@@ -185,7 +186,7 @@ fun AddEditApplicationScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Default
                 ),
                 onValueChange = { viewModel.updateField("jobRequirement", it ) }
             )

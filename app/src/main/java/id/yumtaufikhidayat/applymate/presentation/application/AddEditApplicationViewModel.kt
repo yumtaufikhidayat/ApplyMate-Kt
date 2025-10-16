@@ -3,10 +3,15 @@ package id.yumtaufikhidayat.applymate.presentation.application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.yumtaufikhidayat.applymate.core.ext.autoNormalizeLink
+import id.yumtaufikhidayat.applymate.core.ext.isValidDomainWithoutScheme
+import id.yumtaufikhidayat.applymate.core.ext.isValidJobLink
 import id.yumtaufikhidayat.applymate.core.ext.toEnum
 import id.yumtaufikhidayat.applymate.domain.model.Application
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import id.yumtaufikhidayat.applymate.domain.usecase.application.ApplicationUseCases
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +25,8 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
 
     private val _state = MutableStateFlow(AddEditApplicationState())
     val state: StateFlow<AddEditApplicationState> = _state.asStateFlow()
+
+    private var jobLinkNormalizeJob: Job? = null
 
     fun loadApplication(id: Long?) {
         if (id == null) return
@@ -46,19 +53,28 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
     }
 
     fun updateField(field: String, value: String) {
-        _state.update { current ->
-            when (field) {
-                "position" -> current.copy(position = value, positionError = null)
-                "company" -> current.copy(company = value, companyError = null)
-                "companyAbout" -> current.copy(companyAbout = value)
-                "city" -> current.copy(city = value)
-                "jobLink" -> current.copy(jobLink = value, jobLinkError = null)
-                "jobDesc" -> current.copy(jobDesc = value)
-                "jobRequirement" -> current.copy(jobRequirement = value)
-                "salary" -> current.copy(salary = value)
-                "note" -> current.copy(note = value)
-                else -> current
+        when (field) {
+            "position" -> _state.update { it.copy(position = value, positionError = null) }
+            "company" -> _state.update { it.copy(company = value, companyError = null) }
+            "companyAbout" -> _state.update { it.copy(companyAbout = value) }
+            "city" -> _state.update { it.copy(city = value) }
+            "jobLink" -> {
+                _state.update { it.copy(jobLink = value, jobLinkError = null) }
+
+                jobLinkNormalizeJob?.cancel()
+                jobLinkNormalizeJob = viewModelScope.launch {
+                    delay(500)
+                    val currentLink = _state.value.jobLink
+                    if (currentLink.isValidDomainWithoutScheme() && !currentLink.startsWith("https://")) {
+                        val normalized = currentLink.autoNormalizeLink()
+                        _state.update { it.copy(jobLink = normalized) }
+                    }
+                }
             }
+            "jobDesc" -> _state.update { it.copy(jobDesc = value) }
+            "jobRequirement" -> _state.update { it.copy(jobRequirement = value) }
+            "salary" -> _state.update { it.copy(salary = value) }
+            "note" -> _state.update { it.copy(note = value) }
         }
     }
 
@@ -92,12 +108,14 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 companyError = "Nama perusahaan wajib diisi"
             }
 
-            if (currentState.jobLink.isBlank()) {
+            val jobLink = currentState.jobLink.trim()
+
+            if (jobLink.isBlank()) {
                 hasError = true
                 jobLinkError = "Tautan lamaran wajib diisi"
-            } else if (!android.util.Patterns.WEB_URL.matcher(currentState.jobLink).matches()) {
+            } else if (!jobLink.isValidJobLink()) {
                 hasError = true
-                jobLinkError = "Format link tidak valid"
+                jobLinkError = "Format tautan tidak valid"
             }
 
             _state.value = currentState.copy(
@@ -108,6 +126,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
 
             if (hasError) return@launch
 
+            val normalizedJobLink = currentState.jobLink.autoNormalizeLink()
             val app = Application(
                 id = currentState.id,
                 position = currentState.position,
@@ -115,7 +134,7 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 companyAbout = currentState.companyAbout,
                 city = currentState.city,
                 salary = currentState.salary,
-                jobLink = currentState.jobLink.trim(),
+                jobLink = normalizedJobLink,
                 jobDesc = currentState.jobDesc,
                 jobRequirement = currentState.jobRequirement,
                 note = currentState.note,
