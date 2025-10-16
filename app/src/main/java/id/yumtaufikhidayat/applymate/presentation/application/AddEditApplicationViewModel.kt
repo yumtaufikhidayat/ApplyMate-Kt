@@ -126,7 +126,13 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
 
             if (hasError) return@launch
 
-            val normalizedJobLink = currentState.jobLink.autoNormalizeLink()
+            val normalizedJobLink = currentState.jobLink.let { link ->
+                when {
+                    link.startsWith("https://") -> link
+                    link.isValidDomainWithoutScheme() -> link.autoNormalizeLink()
+                    else -> link
+                }
+            }
             val app = Application(
                 id = currentState.id,
                 position = currentState.position,

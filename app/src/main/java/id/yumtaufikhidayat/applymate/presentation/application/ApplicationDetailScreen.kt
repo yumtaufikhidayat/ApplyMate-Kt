@@ -31,12 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import id.yumtaufikhidayat.applymate.core.ext.cleanUrl
 import id.yumtaufikhidayat.applymate.core.helper.ApplicationTextType
 import id.yumtaufikhidayat.applymate.core.util.toReadableString
+import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextInfo
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 
@@ -64,7 +65,7 @@ fun ApplicationDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false},
+            onDismissRequest = { showDeleteDialog = false },
             title = { Text("Hapus Lamaran?") },
             text = { Text("Data ini akan dihapus secara permanen?") },
             confirmButton = {
@@ -118,38 +119,38 @@ fun ApplicationDetailScreen(
                 title = "Posisi Pekerjaan",
                 description = app.position,
             )
-            
+
             ApplicationTextInfo(
                 title = "Perusahaan",
                 description = app.company
             )
-            
+
             ApplicationTextInfo(
                 title = "Kota",
                 description = app.city.ifBlank { "-" }
             )
-            
+
             ApplicationTextInfo(
                 title = "Tautan Lamaran",
-                description = app.jobLink.cleanUrl(),
+                description = app.jobLink,
                 type = ApplicationTextType.LINK
             )
-            
+
             ApplicationTextInfo(
                 title = "Deskripsi Pekerjaan",
                 description = app.jobDesc.ifBlank { "-" }
             )
-            
+
             ApplicationTextInfo(
                 title = "Persyaratan Pekerjaan",
                 description = app.jobRequirement.ifBlank { "-" }
             )
-            
+
             ApplicationTextInfo(
                 title = "Gaji",
                 description = app.salary.ifBlank { "-" }
             )
-            
+
             ApplicationTextInfo(
                 title = "Catatan",
                 description = app.note.ifBlank { "-" }
@@ -167,7 +168,14 @@ fun ApplicationDetailScreen(
                     }
                 }
             } else {
-                Text("Belum ada riwayat.")
+                val appliedAt = state.application?.appliedAt?.toReadableString() ?: "-"
+                Text(
+                    text = "Lamaran dengan status ${state.application?.status?.name ?: ApplicationStatus.APPLIED} dikirim pada $appliedAt",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
             }
         }
     }
