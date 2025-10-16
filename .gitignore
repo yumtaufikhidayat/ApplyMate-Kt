@@ -367,5 +367,9 @@ $RECYCLE.BIN/
 /gradle.properties
 *.jks
 *.keystore
+/app/google-services.json
+/app/src/main/assets/secret_config.json
+/*.keystore
+/*.jks
 
 # End of https://www.gitignore.io/api/java,linux,macos,windows,android,intellij,androidstudiogradle.properties
