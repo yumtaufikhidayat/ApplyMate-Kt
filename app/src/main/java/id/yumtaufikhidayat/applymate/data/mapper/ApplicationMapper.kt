@@ -17,7 +17,9 @@ fun ApplicationEntity.toDomain() = Application(
     note = note,
     status = ApplicationStatus.valueOf(status),
     appliedAt = appliedAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    interviewDateTime = interviewDateTime,
+    interviewLink = interviewLink
 )
 
 fun Application.toEntity() = ApplicationEntity(
@@ -33,5 +35,7 @@ fun Application.toEntity() = ApplicationEntity(
     note = note,
     status = status.name,
     appliedAt = appliedAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    interviewDateTime = interviewDateTime,
+    interviewLink = interviewLink
 )

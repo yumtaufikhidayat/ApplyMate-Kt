@@ -1,6 +1,6 @@
 package id.yumtaufikhidayat.applymate.presentation.application
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class AddEditApplicationState(
     val id: Long = 0,
@@ -23,8 +23,8 @@ data class AddEditApplicationState(
     val jobLinkError: String? = null,
 
     // Interview State
-    val interviewDate: LocalDate? = null,
+    val interviewDateTime: LocalDateTime? = null,
     val interviewLink: String = "",
-    val interviewDateError: String? = null,
+    val interviewDateTimeError: String? = null,
     val interviewLinkError: String? = null,
 )

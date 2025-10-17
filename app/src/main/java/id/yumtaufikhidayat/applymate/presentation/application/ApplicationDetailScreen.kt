@@ -35,10 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.core.helper.ApplicationTextType
-import id.yumtaufikhidayat.applymate.core.util.toReadableString
+import id.yumtaufikhidayat.applymate.core.ext.toReadableString
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextInfo
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -161,6 +163,25 @@ fun ApplicationDetailScreen(
                 title = "Status Lamaran",
                 description = app.status.name
             )
+
+            if (app.status == ApplicationStatus.INTERVIEW) {
+                val localeId = Locale("id", "ID")
+                val formattedInterviewDateTime = app.interviewDateTime?.format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy 'pukul' HH:mm", localeId)) ?: "-"
+
+                ApplicationTextInfo(
+                    title = "Jadwal Wawancara",
+                    description = formattedInterviewDateTime
+                )
+
+                if (!app.interviewLink.isNullOrBlank()) {
+                    ApplicationTextInfo(
+                        title = "Tautan Wawancara",
+                        description = app.interviewLink,
+                        type = ApplicationTextType.LINK
+                    )
+                }
+            }
+
             Divider(modifier = Modifier.padding(vertical = 12.dp))
 
             Text("Riwayat Status Lamaran", style = MaterialTheme.typography.titleMedium)
@@ -177,7 +198,7 @@ fun ApplicationDetailScreen(
 
                     val appliedAt = application.appliedAt.toReadableString()
                     Text(
-                        text = "• Lamaran dengan status ${ApplicationStatus.APPLIED.name} dikirim pada $appliedAt",
+                        text = "• Lamaran dengan status ${application.status} dikirim pada $appliedAt",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

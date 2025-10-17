@@ -69,4 +69,13 @@ fun String.isValidDomainWithoutScheme(): Boolean {
     return Regex("^[\\w.-]+\\.[a-z]{2,}(\\/.*)?$").matches(trimmed)
 }
 
+fun String.normalizeLinkIfNeeded(): String {
+    val trimmed = this.trim()
+    return when {
+        trimmed.startsWith("https://") -> trimmed
+        trimmed.isValidDomainWithoutScheme() -> trimmed.autoNormalizeLink()
+        else -> trimmed
+    }
+}
+
 

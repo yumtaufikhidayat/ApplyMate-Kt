@@ -1,6 +1,7 @@
 package id.yumtaufikhidayat.applymate.domain.model
 
 import java.time.Instant
+import java.time.LocalDateTime
 
 data class Application(
     val id: Long = 0,
@@ -15,5 +16,7 @@ data class Application(
     val note: String,
     val status: ApplicationStatus,
     val appliedAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val interviewDateTime: LocalDateTime?,
+    val interviewLink: String?,
 )

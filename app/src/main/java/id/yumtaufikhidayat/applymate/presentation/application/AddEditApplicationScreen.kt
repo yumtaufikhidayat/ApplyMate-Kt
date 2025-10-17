@@ -50,9 +50,12 @@ import id.yumtaufikhidayat.applymate.presentation.components.FormDateField
 import id.yumtaufikhidayat.applymate.presentation.components.FormMultiLineTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextFieldLink
+import id.yumtaufikhidayat.applymate.presentation.components.TimePickerDialog
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,23 +71,27 @@ fun AddEditApplicationScreen(
     var selectedStatus by remember { mutableStateOf(ApplicationStatus.APPLIED) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = state.interviewDate
-                ?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
-                ?: Instant.now().toEpochMilli()
-        )
+        val initialDate = state.interviewDateTime?.toLocalDate() ?: LocalDate.now()
+        val initialMillis = initialDate
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     val millis = datePickerState.selectedDateMillis
                     if (millis != null) {
-                        val localDate = Instant.ofEpochMilli(millis)
+                        val pickedDate = Instant.ofEpochMilli(millis)
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
-                        viewModel.updateInterviewDate(localDate)
+                        viewModel.updateInterviewDate(pickedDate)
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -95,6 +102,17 @@ fun AddEditApplicationScreen(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            show = showTimePicker,
+            initialTime = state.interviewDateTime?.toLocalTime(),
+            onDismiss = { showTimePicker = false },
+            onConfirm = { pickedTime ->
+                viewModel.updateInterviewTime(pickedTime.hour, pickedTime.minute)
+            }
+        )
     }
 
     LaunchedEffect(appId) {
@@ -170,7 +188,7 @@ fun AddEditApplicationScreen(
                 onValueChange = { viewModel.updateField("position", it) }
             )
             FormTextField(
-                label = "Perusahaan",
+                label = "Nama Perusahaan",
                 value = state.company,
                 error = state.companyError,
                 keyboardOptions = KeyboardOptions(
@@ -247,7 +265,7 @@ fun AddEditApplicationScreen(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Done
                 ),
-//                placeholder = "Contoh: alamat kantor, link wawancara, jadwal wawancara, dsb",
+                placeholder = "Contoh: alamat kantor, catatan tambahan dari HRD/interviewer, dll.",
                 onValueChange = { viewModel.updateField("note", it) }
             )
             ExposedDropdownMenuBox(
@@ -288,19 +306,26 @@ fun AddEditApplicationScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     FormDateField(
                         label = "Tanggal Wawancara",
-                        valueText = state.interviewDate
-                            ?.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                            .orEmpty(),
-                        error = state.interviewDateError,
+                        valueText = state.interviewDateTime?.format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy")).orEmpty(),
+                        error = state.interviewDateTimeError,
                         onClick = { showDatePicker = true }
                     )
 
-                    FormTextField(
+                    FormDateField(
+                        label = "Jam Wawancara",
+                        valueText = state.interviewDateTime?.format(DateTimeFormatter.ofPattern("HH:mm")).orEmpty(),
+                        onClick = { showTimePicker = true }
+                    )
+
+                    FormTextFieldLink(
                         label = "Tautan Wawancara",
                         value = state.interviewLink,
                         onValueChange = { viewModel.updateField("interviewLink", it) },
                         error = state.interviewLinkError,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Next
+                        ),
                     )
                 }
             }

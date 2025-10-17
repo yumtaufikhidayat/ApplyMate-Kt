@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import id.yumtaufikhidayat.applymate.core.ext.autoNormalizeLink
 import id.yumtaufikhidayat.applymate.core.ext.isValidDomainWithoutScheme
 import id.yumtaufikhidayat.applymate.core.ext.isValidJobLink
+import id.yumtaufikhidayat.applymate.core.ext.normalizeLinkIfNeeded
 import id.yumtaufikhidayat.applymate.core.ext.toEnum
 import id.yumtaufikhidayat.applymate.domain.model.Application
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
@@ -19,15 +20,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
-class AddEditApplicationViewModel @Inject constructor(private val useCases: ApplicationUseCases) : ViewModel() {
+class AddEditApplicationViewModel @Inject constructor(
+    private val useCases: ApplicationUseCases
+) : ViewModel() {
 
     private val _state = MutableStateFlow(AddEditApplicationState())
     val state: StateFlow<AddEditApplicationState> = _state.asStateFlow()
 
     private var jobLinkNormalizeJob: Job? = null
+    private var interviewLinkNormalizeJob: Job? = null
 
     fun loadApplication(id: Long?) {
         if (id == null) return
@@ -46,7 +52,9 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                         jobRequirement = it.jobRequirement,
                         note = it.note,
                         status = it.status.name,
-                        isEditMode = true
+                        isEditMode = true,
+                        interviewDateTime = it.interviewDateTime,
+                        interviewLink = it.interviewLink.orEmpty()
                     )
                 }
             }
@@ -61,22 +69,16 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
             "city" -> _state.update { it.copy(city = value) }
             "jobLink" -> {
                 _state.update { it.copy(jobLink = value, jobLinkError = null) }
-
-                jobLinkNormalizeJob?.cancel()
-                jobLinkNormalizeJob = viewModelScope.launch {
-                    delay(500)
-                    val currentLink = _state.value.jobLink
-                    if (currentLink.isValidDomainWithoutScheme() && !currentLink.startsWith("https://")) {
-                        val normalized = currentLink.autoNormalizeLink()
-                        _state.update { it.copy(jobLink = normalized) }
-                    }
-                }
+                jobLinkNormalizeJob = normalizeLinkWithDebounce("jobLink", value, jobLinkNormalizeJob)
             }
             "jobDesc" -> _state.update { it.copy(jobDesc = value) }
             "jobRequirement" -> _state.update { it.copy(jobRequirement = value) }
             "salary" -> _state.update { it.copy(salary = value) }
             "note" -> _state.update { it.copy(note = value) }
-            "interviewLink" -> _state.update { it.copy(interviewLink = value, interviewLinkError = null) }
+            "interviewLink" -> {
+                _state.update { it.copy(interviewLink = value, interviewLinkError = null) }
+                interviewLinkNormalizeJob = normalizeLinkWithDebounce("interviewLink", value, interviewLinkNormalizeJob)
+            }
         }
     }
 
@@ -127,25 +129,21 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
             )
 
             if (selectedStatus == ApplicationStatus.INTERVIEW) {
-                if (currentState.interviewDate == null) {
+                if (currentState.interviewDateTime == null) {
                     hasError = true
-                    _state.update { it.copy(interviewDateError = "Tanggal wawancara wajib diisi") }
+                    _state.update { it.copy(interviewDateTimeError = "Jadwal (tanggal & jam) wawancara wajib diisi") }
                 }
                 if (currentState.interviewLink.isBlank()) {
                     hasError = true
-                    _state.update { it.copy(interviewLinkError = "Link meeting wajib diisi") }
+                    _state.update { it.copy(interviewLinkError = "Tautan wawancara wajib diisi") }
                 }
             }
 
             if (hasError) return@launch
 
-            val normalizedJobLink = currentState.jobLink.let { link ->
-                when {
-                    link.startsWith("https://") -> link
-                    link.isValidDomainWithoutScheme() -> link.autoNormalizeLink()
-                    else -> link
-                }
-            }
+            val normalizedJobLink = currentState.jobLink.normalizeLinkIfNeeded()
+            val normalizedInterviewLink = currentState.interviewLink.normalizeLinkIfNeeded()
+
             val app = Application(
                 id = currentState.id,
                 position = currentState.position,
@@ -159,7 +157,9 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
                 note = currentState.note,
                 status = selectedStatus,
                 appliedAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                interviewDateTime = if (selectedStatus == ApplicationStatus.INTERVIEW) currentState.interviewDateTime else null,
+                interviewLink = if (selectedStatus == ApplicationStatus.INTERVIEW) normalizedInterviewLink else null
             )
 
             if (currentState.isEditMode) {
@@ -184,10 +184,50 @@ class AddEditApplicationViewModel @Inject constructor(private val useCases: Appl
     }
 
     fun updateInterviewDate(date: LocalDate) {
-        _state.update { it.copy(interviewDate = date, interviewDateError = null) }
+        val currentTime = _state.value.interviewDateTime?.toLocalTime() ?: LocalTime.now()
+        _state.update {
+            it.copy(
+                interviewDateTime = LocalDateTime.of(date, currentTime),
+                interviewDateTimeError = null
+            )
+        }
+    }
+
+    fun updateInterviewTime(hour: Int, minute: Int) {
+        _state.update {
+            val date = it.interviewDateTime?.toLocalDate() ?: LocalDate.now()
+            val newDateTime = LocalDateTime.of(date, LocalTime.of(hour, minute))
+            it.copy(interviewDateTime = newDateTime)
+        }
     }
 
     fun consumeSnackbar() {
         _state.value = state.value.copy(snackbarMessage = null)
+    }
+
+    private fun normalizeLinkWithDebounce(
+        fieldName: String,
+        value: String,
+        currentJob: Job?,
+    ): Job {
+        currentJob?.cancel()
+        return viewModelScope.launch {
+            delay(DELAY_COMPLETED_TYPING)
+            val currentLink = value.trim().lowercase()
+            if (currentLink.isValidDomainWithoutScheme() && !currentLink.startsWith("https://")) {
+                val normalized = currentLink.autoNormalizeLink()
+                _state.update {
+                    when (fieldName) {
+                        "jobLink" -> it.copy(jobLink = normalized)
+                        "interviewLink" -> it.copy(interviewLink = normalized)
+                        else -> it
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        private const val DELAY_COMPLETED_TYPING = 500L
     }
 }
