@@ -2,6 +2,7 @@ package id.yumtaufikhidayat.applymate.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -19,7 +20,8 @@ data class ApplicationEntity(
     val jobDesc: String,
     val jobRequirement: String,
     val note: String,
-    val status: String,
+    val status: ApplicationStatus,
+    val initialStatus: ApplicationStatus,
     val appliedAt: Instant,
     val updatedAt: Instant,
     val interviewDateTime: LocalDateTime?,

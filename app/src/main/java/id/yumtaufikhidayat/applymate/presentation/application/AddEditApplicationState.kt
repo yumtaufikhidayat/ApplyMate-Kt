@@ -11,7 +11,6 @@ data class AddEditApplicationState(
     val jobLink: String = "",
     val jobDesc: String = "",
     val jobRequirement: String = "",
-    val salary: String = "",
     val note: String = "",
     val status: String? = null,
     val isEditMode: Boolean = false,
@@ -27,4 +26,8 @@ data class AddEditApplicationState(
     val interviewLink: String = "",
     val interviewDateTimeError: String? = null,
     val interviewLinkError: String? = null,
+
+    // Salary State
+    val salary: String = "",
+    val salaryFormatted: String = "",
 )

@@ -1,5 +1,8 @@
 package id.yumtaufikhidayat.applymate.core.ext
 
+import java.text.NumberFormat
+import java.util.Locale
+
 /**
  * Cleans and validates job application URLs.
  * - Adds https:// if there is no prefix.
@@ -78,4 +81,23 @@ fun String.normalizeLinkIfNeeded(): String {
     }
 }
 
+/**
+ * Helper for formatting numbers to Indonesian thousands.
+ * "1000000" → "1,000,000"
+ */
+fun String.toCurrencyFormat(): String {
+    if (this.isBlank()) return ""
+    val number = this.toLongOrNull() ?: return this
+    val formatter = NumberFormat.getNumberInstance(Locale("id", "ID"))
+    return formatter.format(number)
+}
+
+fun String.toCurrencyFormatted(): String {
+    if (this.isBlank()) return ""
+    return try {
+        NumberFormat.getNumberInstance(Locale("id", "ID")).format(this.toLong())
+    } catch (_: Exception) {
+        this
+    }
+}
 

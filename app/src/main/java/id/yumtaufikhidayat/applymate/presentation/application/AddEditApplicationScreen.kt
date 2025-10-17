@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
+import id.yumtaufikhidayat.applymate.presentation.components.FormCurrencyTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormDateField
 import id.yumtaufikhidayat.applymate.presentation.components.FormMultiLineTextField
 import id.yumtaufikhidayat.applymate.presentation.components.FormTextField
@@ -248,13 +249,9 @@ fun AddEditApplicationScreen(
                 ),
                 onValueChange = { viewModel.updateField("jobRequirement", it) }
             )
-            FormTextField(
+            FormCurrencyTextField(
                 label = "Gaji (Opsional)",
                 value = state.salary,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
                 onValueChange = { viewModel.updateField("salary", it) }
             )
             FormMultiLineTextField(

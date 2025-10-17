@@ -7,6 +7,7 @@ import id.yumtaufikhidayat.applymate.core.ext.autoNormalizeLink
 import id.yumtaufikhidayat.applymate.core.ext.isValidDomainWithoutScheme
 import id.yumtaufikhidayat.applymate.core.ext.isValidJobLink
 import id.yumtaufikhidayat.applymate.core.ext.normalizeLinkIfNeeded
+import id.yumtaufikhidayat.applymate.core.ext.toCurrencyFormat
 import id.yumtaufikhidayat.applymate.core.ext.toEnum
 import id.yumtaufikhidayat.applymate.domain.model.Application
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
@@ -34,6 +35,7 @@ class AddEditApplicationViewModel @Inject constructor(
 
     private var jobLinkNormalizeJob: Job? = null
     private var interviewLinkNormalizeJob: Job? = null
+    private var salaryNormalizeJob: Job? = null
 
     fun loadApplication(id: Long?) {
         if (id == null) return
@@ -69,15 +71,19 @@ class AddEditApplicationViewModel @Inject constructor(
             "city" -> _state.update { it.copy(city = value) }
             "jobLink" -> {
                 _state.update { it.copy(jobLink = value, jobLinkError = null) }
-                jobLinkNormalizeJob = normalizeLinkWithDebounce("jobLink", value, jobLinkNormalizeJob)
+                jobLinkNormalizeJob = jobLinkNormalizeJob.normalizeLinkWithDebounce("jobLink", value)
             }
             "jobDesc" -> _state.update { it.copy(jobDesc = value) }
             "jobRequirement" -> _state.update { it.copy(jobRequirement = value) }
-            "salary" -> _state.update { it.copy(salary = value) }
+            "salary" -> {
+                _state.update { it.copy(salary = value.filter { char -> char.isDigit() }) }
+                salaryNormalizeJob = salaryNormalizeJob.normalizeSalaryWithDebounce(value)
+            }
+
             "note" -> _state.update { it.copy(note = value) }
             "interviewLink" -> {
                 _state.update { it.copy(interviewLink = value, interviewLinkError = null) }
-                interviewLinkNormalizeJob = normalizeLinkWithDebounce("interviewLink", value, interviewLinkNormalizeJob)
+                interviewLinkNormalizeJob = interviewLinkNormalizeJob.normalizeLinkWithDebounce("interviewLink", value)
             }
         }
     }
@@ -144,26 +150,28 @@ class AddEditApplicationViewModel @Inject constructor(
             val normalizedJobLink = currentState.jobLink.normalizeLinkIfNeeded()
             val normalizedInterviewLink = currentState.interviewLink.normalizeLinkIfNeeded()
 
-            val app = Application(
-                id = currentState.id,
-                position = currentState.position,
-                company = currentState.company,
-                companyAbout = currentState.companyAbout,
-                city = currentState.city,
-                salary = currentState.salary,
-                jobLink = normalizedJobLink,
-                jobDesc = currentState.jobDesc,
-                jobRequirement = currentState.jobRequirement,
-                note = currentState.note,
-                status = selectedStatus,
-                appliedAt = Instant.now(),
-                updatedAt = Instant.now(),
-                interviewDateTime = if (selectedStatus == ApplicationStatus.INTERVIEW) currentState.interviewDateTime else null,
-                interviewLink = if (selectedStatus == ApplicationStatus.INTERVIEW) normalizedInterviewLink else null
-            )
-
             if (currentState.isEditMode) {
+                val oldApplication = useCases.getApplicationByIdSync(currentState.id)
                 val oldStatus = currentState.status?.toEnum<ApplicationStatus>()
+
+                val updateApp = oldApplication?.copy(
+                    position = currentState.position,
+                    company = currentState.company,
+                    companyAbout = currentState.companyAbout,
+                    city = currentState.city,
+                    salary = currentState.salary,
+                    jobLink = normalizedJobLink,
+                    jobDesc = currentState.jobDesc,
+                    jobRequirement = currentState.jobRequirement,
+                    note = currentState.note,
+                    status = selectedStatus,
+                    initialStatus = oldApplication.initialStatus,
+                    updatedAt = Instant.now(),
+                    appliedAt = Instant.now(),
+                    interviewDateTime = if (selectedStatus == ApplicationStatus.INTERVIEW) currentState.interviewDateTime else null,
+                    interviewLink = if (selectedStatus == ApplicationStatus.INTERVIEW) normalizedInterviewLink else null
+                ) ?: return@launch
+
                 if (oldStatus != selectedStatus) {
                     useCases.updateApplicationStatus(
                         appId = currentState.id,
@@ -172,13 +180,33 @@ class AddEditApplicationViewModel @Inject constructor(
                         note = "Perubahan status lamaran"
                     )
                 }
-                useCases.updateApplication(app)
+
+                useCases.updateApplication(updateApp)
                 _state.value = currentState.copy(snackbarMessage = "Lamaran berhasil diperbarui")
-                onSaved(app.id)
+                onSaved(updateApp.id)
             } else {
-                useCases.addApplication(app)
+                val newApp = Application(
+                    id = currentState.id,
+                    position = currentState.position,
+                    company = currentState.company,
+                    companyAbout = currentState.companyAbout,
+                    city = currentState.city,
+                    salary = currentState.salary,
+                    jobLink = normalizedJobLink,
+                    jobDesc = currentState.jobDesc,
+                    jobRequirement = currentState.jobRequirement,
+                    note = currentState.note,
+                    status = selectedStatus,
+                    initialStatus = selectedStatus,
+                    appliedAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                    interviewDateTime = if (selectedStatus == ApplicationStatus.INTERVIEW) currentState.interviewDateTime else null,
+                    interviewLink = if (selectedStatus == ApplicationStatus.INTERVIEW) normalizedInterviewLink else null
+                )
+
+                useCases.addApplication(newApp)
                 _state.value = currentState.copy(snackbarMessage = "Lamaran berhasil ditambahkan")
-                onSaved(app.id)
+                onSaved(newApp.id)
             }
         }
     }
@@ -205,12 +233,11 @@ class AddEditApplicationViewModel @Inject constructor(
         _state.value = state.value.copy(snackbarMessage = null)
     }
 
-    private fun normalizeLinkWithDebounce(
+    private fun Job?.normalizeLinkWithDebounce(
         fieldName: String,
         value: String,
-        currentJob: Job?,
     ): Job {
-        currentJob?.cancel()
+        this?.cancel()
         return viewModelScope.launch {
             delay(DELAY_COMPLETED_TYPING)
             val currentLink = value.trim().lowercase()
@@ -224,6 +251,16 @@ class AddEditApplicationViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun Job?.normalizeSalaryWithDebounce(value: String): Job {
+        this?.cancel()
+        return viewModelScope.launch {
+            delay(DELAY_COMPLETED_TYPING)
+            val cleanValue = value.filter { it.isDigit() }
+            val formatted = cleanValue.toCurrencyFormat()
+            _state.update { it.copy(salary = cleanValue, salaryFormatted = formatted) }
         }
     }
 

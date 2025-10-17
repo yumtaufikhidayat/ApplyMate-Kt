@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface ApplicationRepository {
     fun getAll(): Flow<List<Application>>
     fun getById(id: Long): Flow<Application?>
+    suspend fun getApplicationByIdSync(id: Long): Application?
     suspend fun insert(application: Application)
     suspend fun update(application: Application)
     suspend fun updateStatus(id: Long, status: ApplicationStatus)

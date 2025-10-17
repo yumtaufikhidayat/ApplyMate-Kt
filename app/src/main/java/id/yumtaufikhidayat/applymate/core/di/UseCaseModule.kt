@@ -11,6 +11,7 @@ import id.yumtaufikhidayat.applymate.domain.repository.StatusHistoryRepository
 import id.yumtaufikhidayat.applymate.domain.usecase.application.AddApplicationUseCase
 import id.yumtaufikhidayat.applymate.domain.usecase.application.ApplicationUseCases
 import id.yumtaufikhidayat.applymate.domain.usecase.application.DeleteApplicationUseCase
+import id.yumtaufikhidayat.applymate.domain.usecase.application.GetApplicationByIdSyncUseCase
 import id.yumtaufikhidayat.applymate.domain.usecase.application.GetApplicationByIdUseCase
 import id.yumtaufikhidayat.applymate.domain.usecase.application.GetApplicationsUseCase
 import id.yumtaufikhidayat.applymate.domain.usecase.application.UpdateApplicationStatusUseCase
@@ -38,6 +39,7 @@ object UseCaseModule {
         addApplication = AddApplicationUseCase(appRepo),
         getApplications = GetApplicationsUseCase(appRepo),
         getApplicationById = GetApplicationByIdUseCase(appRepo),
+        getApplicationByIdSync = GetApplicationByIdSyncUseCase(appRepo),
         updateApplicationStatus = UpdateApplicationStatusUseCase(appRepo, historyRepo),
         updateApplication = UpdateApplicationUseCase(appRepo),
         deleteApplication = DeleteApplicationUseCase(appRepo)

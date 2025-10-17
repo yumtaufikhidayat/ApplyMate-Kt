@@ -47,6 +47,7 @@ fun FormMultiLineTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         shape = RoundedCornerShape(8.dp),
+        singleLine = false,
         modifier = modifier.fillMaxWidth().height(150.dp),
         placeholder = { Text(text = placeholder) }
     )

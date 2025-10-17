@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import id.yumtaufikhidayat.applymate.data.local.entity.ApplicationEntity
+import id.yumtaufikhidayat.applymate.domain.model.Application
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,6 +18,9 @@ interface ApplicationDao {
 
     @Query("SELECT * FROM applications WHERE id = :id")
     fun getById(id: Long): Flow<ApplicationEntity?>
+
+    @Query("SELECT * FROM applications WHERE id = :id LIMIT 1")
+    suspend fun getApplicationByIdSync(id: Long): Application?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(application: ApplicationEntity)

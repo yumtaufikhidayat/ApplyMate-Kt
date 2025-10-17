@@ -32,4 +32,7 @@ class ApplicationRepositoryImpl @Inject constructor(
 
     override suspend fun delete(application: Application) =
         dao.delete(application.toEntity())
+
+    override suspend fun getApplicationByIdSync(id: Long): Application? =
+        dao.getApplicationByIdSync(id)
 }

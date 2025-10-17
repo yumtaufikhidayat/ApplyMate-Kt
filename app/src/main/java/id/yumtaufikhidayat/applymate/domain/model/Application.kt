@@ -15,6 +15,7 @@ data class Application(
     val jobRequirement: String,
     val note: String,
     val status: ApplicationStatus,
+    val initialStatus: ApplicationStatus,
     val appliedAt: Instant,
     val updatedAt: Instant,
     val interviewDateTime: LocalDateTime?,

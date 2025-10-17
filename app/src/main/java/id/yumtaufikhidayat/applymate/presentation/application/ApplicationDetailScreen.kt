@@ -34,10 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import id.yumtaufikhidayat.applymate.core.ext.toCurrencyFormatted
 import id.yumtaufikhidayat.applymate.core.helper.ApplicationTextType
-import id.yumtaufikhidayat.applymate.core.ext.toReadableString
 import id.yumtaufikhidayat.applymate.domain.model.ApplicationStatus
+import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextCurrencyInfo
 import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTextInfo
+import id.yumtaufikhidayat.applymate.presentation.components.ApplicationTimeline
 import id.yumtaufikhidayat.applymate.presentation.navigation.Routes
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -149,9 +151,9 @@ fun ApplicationDetailScreen(
                 description = app.jobRequirement.ifBlank { "-" }
             )
 
-            ApplicationTextInfo(
+            ApplicationTextCurrencyInfo(
                 title = "Gaji",
-                description = app.salary.ifBlank { "-" }
+                salary = app.salary.toCurrencyFormatted().ifBlank { "-" }
             )
 
             ApplicationTextInfo(
@@ -166,7 +168,7 @@ fun ApplicationDetailScreen(
 
             if (app.status == ApplicationStatus.INTERVIEW) {
                 val localeId = Locale("id", "ID")
-                val formattedInterviewDateTime = app.interviewDateTime?.format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy 'pukul' HH:mm", localeId)) ?: "-"
+                val formattedInterviewDateTime = app.interviewDateTime?.format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy '•' HH:mm", localeId)) ?: "-"
 
                 ApplicationTextInfo(
                     title = "Jadwal Wawancara",
@@ -186,22 +188,10 @@ fun ApplicationDetailScreen(
 
             Text("Riwayat Status Lamaran", style = MaterialTheme.typography.titleMedium)
             if (application != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    if (historyList.isNotEmpty()) {
-                        historyList.forEach { history ->
-                            Text(
-                                text = "• Perubahan status ${history.fromStatus ?: "-"} menjadi ${history.toStatus} pada ${history.changedAt.toReadableString()}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-
-                    val appliedAt = application.appliedAt.toReadableString()
-                    Text(
-                        text = "• Lamaran dengan status ${application.status} dikirim pada $appliedAt",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                ApplicationTimeline(
+                    historyList = historyList,
+                    application = application
+                )
             } else {
                 Text(
                     text = "Data lamaran tidak ditemukan.",
